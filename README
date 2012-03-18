@@ -5,7 +5,7 @@ may be it will be added in next version
 
 usage example :
 
-firs you should use this widget in your admin.php (nomorlly created by gii/giix 's crud action)
+first you should use this widget in your admin.php (nomorlly created by gii/giix 's crud action)
 
 
 <?php
