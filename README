@@ -1,0 +1,77 @@
+this exension is based on :http://www.yiiframework.com/extension/csvexport
+
+just for the CActiveDataProvider ,if you use the CSqlDataProvider please do not use this
+may be it will be added in next version
+
+usage example :
+
+firs you should use this widget in your admin.php (nomorlly created by gii/giix 's crud action)
+
+
+<?php
+$this->widget('ext.CSVExport.CsvExporter',array(
+    'cmdLable'=>'export as csv file',
+   'model'=>$model
+));
+?>
+
+<?php
+$this->widget('zii.widgets.grid.CGridView', array(
+//$this->widget('LGridView', array(
+    'id' => 'user-profile-grid',
+    'dataProvider' => $model->search(),
+    'filter' => $model,
+    'columns' => array(
+        array(
+            'class' => 'CCheckBoxColumn',
+            'selectableRows' => 2,
+            // 'value'=>'$data->getPrimaryKey()',
+        ),
+        'uid',
+        'realname',
+        'birthday',
+        'constellation',
+        'zodiac',
+        'tel',
+        array(
+            "header" => "Options",
+            "type" => "raw",
+            'value' => 'CHtml::link("link","#",array("onclick"=>"alert()"))',
+        ),
+        array(
+            'name' => 'company',
+            'value' => '$data->company',
+            'filter' => "<input type='text' id='f1' class='ignore' name='f1'/><input type='text' id='f2' name='f2'/>",
+        ),
+        ..............
+        array(
+            'class' => 'CButtonColumn',
+        ),
+    ),
+)); ?>
+
+
+ then in your actionAdmin (UserProfileController::actionAdmin for me):
+
+   public function actionAdmin()
+      {
+          $model = new UserProfile('search');
+          $model->unsetAttributes();
+
+          if (isset($_GET['UserProfile']))
+              $model->attributes = $_GET['UserProfile'];
+
+           //-------<added code here>---------------------------------------------------------------------------------------------
+              Yii::import('ext.CSVExport.CsvExporter');
+              CsvExporter::$fileName =  'theUserProfile.csv';
+              CsvExporter::export($model);
+              //   CsvExporter::export($model,'uid,realname',array('用户id','真实姓名')); //you can alse specify the column , the label for header
+           //--------<added code here/>---------------------------------------------------------------------------------------------
+
+          $this->render('admin', array(
+              'model' => $model,
+          ));
+      }
+
+
+      for more detail please refer to the source code
