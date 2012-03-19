@@ -152,6 +152,11 @@ CODE;
      */
     static public $fileName = 'export.csv';
 
+    /**
+     * @var array
+     * for the underlying CSVExport object
+     */
+    static public $options = array();
 
     /**
      * @static
@@ -178,10 +183,16 @@ CODE;
                 $csv->headers = $headers;
             }
             $csv->headers = $model->attributeLabels();
+            $csv->exportFull = false ; //default use pagination
+            if(!empty(self::$options)){
+                foreach(self::$options as $key=>$value)
+                    $csv->$key=$value;
+            }
+            //  echo var_export($provider->getCriteria()->toArray(),true);
 
             $content = $csv->toCSV(null, "\t", '"');
             Yii::app()->getRequest()->sendFile(self::$fileName, $content, "text/csv", false);
-            exit;
+            die();//  exit;
         }
         /*
         else{

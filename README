@@ -75,3 +75,49 @@ $this->widget('zii.widgets.grid.CGridView', array(
 
 
       for more detail please refer to the source code
+
+
+ ============================================================================================================================
+ use the toexcel behavior  http://www.yiiframework.com/extension/toexcel/ is similar to above:
+
+ in actionAdmin:
+
+   public function actionAdmin()
+     {
+         $model = new UserProfile('search');
+         $model->unsetAttributes();
+
+         if (isset($_GET['UserProfile']))
+             $model->attributes = $_GET['UserProfile'];
+
+         if(isset($_GET['act'])){
+              /*
+             Yii::import('ext.CSVExport.CsvExporter');
+             CsvExporter::$options = array(
+                 'exportFull'=>false,
+             );
+             CsvExporter::export($model,'uid,realname',array('用户id','真实姓名'));
+               */
+             //Yii::import('ext.eexcelview.EExcelBehavior');
+             $bh = Yii::createComponent(array(
+                 'class'=>'ext.eexcelview.EExcelBehavior',
+             ));
+             $this->attachBehavior('excelExport',$bh);
+
+             $this->toExcel($model->search(),
+                 array(
+
+                 ),
+                 'Test File',
+                 array(
+                     'creator' => 'yiqing',
+                 ),
+                 'Excel2007' // This is the default value, so you can omit it. You can export to CSV, PDF or HTML too
+             );
+         }
+
+         $this->render('admin', array(
+             'model' => $model,
+         ));
+     }
+
