@@ -40,7 +40,32 @@ class CsvExporter extends CWidget
      */
     public $girdId;
 
+    /**
+     * @var string
+     * label for the botton
+     */
     public $cmdLable = 'Export';
+
+    /**
+     * @var array
+     * passed to the underlying DropDownList
+     */
+    public $ddlOptions = array(
+        'select' => 'csv',
+        'data' => array('csv' => 'csv'),
+        'htmlOptions' => array());
+
+    /**
+     * @var string
+     * template for output this widget the {cmd} and {ddl} represent the commandButton and the dropdownlist.
+     */
+    public $template = '{cmd} 格式 ：{ddl}';
+
+    /**
+     * @var array
+     */
+    public $extraData = array();
+
 
     /**
      * @throws CException
@@ -59,12 +84,29 @@ class CsvExporter extends CWidget
 
     public function run()
     {
-        echo CHtml::button($this->cmdLable,
+        $cmd = CHtml::button($this->cmdLable,
             array('id' => 'export-button',
                 'class' => 'span-3 button',
                 'title' => $this->girdId,
                 'onclick' => 'CsvExporter.export(this)'
             ));
+
+        $ddl = '';
+        if (!empty($this->ddlOptions)) {
+            $ddlOptions = array(
+                'name' => 'exportType',
+                'select' => '',
+                'data' => array(),
+                'htmlOptions' => array('for' => 'exportType')
+            );
+            $ddlOptions = CMap::mergeArray($ddlOptions, $this->ddlOptions);
+            $ddl = CHtml::dropDownList($ddlOptions['name'], $ddlOptions['select'], $ddlOptions['data'], $ddlOptions['htmlOptions']);
+        }
+
+        echo strtr($this->template, array(
+            '{cmd}' => $cmd,
+            '{ddl}' => $ddl,
+        ));
 
         $cs = Yii::app()->getClientScript();
         $cs->registerScript(__CLASS__, $this->jsCode(), CClientScript::POS_END);
@@ -75,7 +117,12 @@ class CsvExporter extends CWidget
      */
     public function jsCode()
     {
-        $iframeId = __CLASS__.'_tempFrame';
+        $extData = '{}';
+        if (!empty($this->extraData) && is_array($this->extraData)) {
+            $extData = CJavaScript::encode($this->extraData);
+        }
+
+        $iframeId = __CLASS__ . '_tempFrame';
         $js = <<<CODE
  var CsvExporter = {
         counter:0,
@@ -90,11 +137,16 @@ class CsvExporter extends CWidget
                 \$tempFrame.appendTo('body');
             }
             CsvExporter.counter = CsvExporter.counter + 1;
-            url = $.param.querystring(url,
+
+            var exportType = $(":input[for='exportType']").val();
+            var params = $.extend(
                 {"counter":CsvExporter.counter,
-                    'act':'exportCsv'
-                }
-            );
+                    'act':'exportCsv',
+                    'exportType':exportType
+                },{$extData});
+
+            url = $.param.querystring(url,params);
+
             \$tempFrame.attr('src', url);
             \$tempFrame.css('display','none');
             // window.location = url;
@@ -183,16 +235,16 @@ CODE;
                 $csv->headers = $headers;
             }
             $csv->headers = $model->attributeLabels();
-            $csv->exportFull = false ; //default use pagination
-            if(!empty(self::$options)){
-                foreach(self::$options as $key=>$value)
-                    $csv->$key=$value;
+            $csv->exportFull = false; //default use pagination
+            if (!empty(self::$options)) {
+                foreach (self::$options as $key => $value)
+                    $csv->$key = $value;
             }
             //  echo var_export($provider->getCriteria()->toArray(),true);
 
             $content = $csv->toCSV(null, "\t", '"');
             Yii::app()->getRequest()->sendFile(self::$fileName, $content, "text/csv", false);
-            die();//  exit;
+            die(); //  exit;
         }
         /*
         else{

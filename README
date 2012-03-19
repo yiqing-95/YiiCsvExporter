@@ -121,3 +121,61 @@ $this->widget('zii.widgets.grid.CGridView', array(
          ));
      }
 
+====================================================================================================================
+advance usage:
+
+in admin.php :
+
+  $this->widget('ext.CSVExport.CsvExporter',array(
+        'cmdLable'=>'exportGridView as a file',
+        'model'=>$model,
+        'template'=>'please chooseType{ddl} {cmd}',
+        'ddlOptions'=>array(
+            'data'=>array('CSV'=>'csv','PDF'=>'PDF','Excel2007'=>'Excel2007','HTML'=>'HTML'),
+        ),
+    ));
+
+
+in your controller :
+
+public function actionAdminAdv()
+    {
+        $model = new User('search');
+        $model->unsetAttributes(); // clear any default values
+        if (isset($_GET['User']))
+            $model->attributes = $_GET['User'];
+
+
+        if (isset($_GET['act'])) {
+
+            $bh = Yii::createComponent(array(
+                'class' => 'ext.eexcelview.EExcelBehavior',
+            ));
+            $this->attachBehavior('excelExport', $bh);
+
+            //refer to CGridView
+            $columns = array(
+                'nickname',
+                'realName',
+
+                array(
+                    'name' => 'emailAsId',
+                    'header' => 'email address',
+                    'footer' => '',
+                ),
+            );
+
+            $this->toExcel($model->search(),
+                $columns,
+                'userInfo',
+                array(
+                    'creator' => 'yiqing',
+                ),
+                isset($_GET['exportType']) ? $_GET['exportType'] : 'CSV' // This is the default value, so you can omit it. You can export to CSV, PDF or HTML too
+            );
+        }
+
+        $this->render('adminAdv', array(
+            'model' => $model,
+        ));
+    }
